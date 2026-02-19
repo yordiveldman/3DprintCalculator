@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Print Prijscalculator</title>
+<meta name="description" content="Bereken verkoopprijzen voor je 3D prints op Bol.com, Etsy en Vinted.">
+<meta name="theme-color" content="#ff6b35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="3D Prijs">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1f1f1f;
+    --border: #2a2a2a;
+    --accent: #ff6b35;
+    --accent2: #ffb347;
+    --text: #f0f0f0;
+    --muted: #888;
+    --bol: #0072ef;
+    --etsy: #f16521;
+    --vinted: #09b1ba;
+    --green: #39d98a;
+    --red: #ff4d4d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image: 
+      linear-gradient(rgba(255,107,53,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,107,53,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .logo {
+    width: 56px; height: 56px;
+    background: var(--accent);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  h1 {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 680px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: #3a3a3a; }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .card-title {
+    font-size: 0.75rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 1.2rem;
+  }
+
+  .input-group {
+    margin-bottom: 1rem;
+  }
+
+  label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  label .hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: #555;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.12);
+  }
+
+  .prefix-input {
+    position: relative;
+  }
+
+  .prefix-input span {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    pointer-events: none;
+  }
+
+  .prefix-input input { padding-left: 1.8rem; }
+
+  .results-full {
+    grid-column: 1 / -1;
+  }
+
+  .platform-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 0;
+  }
+
+  @media (max-width: 680px) {
+    .platform-cards { grid-template-columns: 1fr; }
+    .results-full { grid-column: 1; }
+  }
+
+  .platform-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.4rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .platform-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  }
+
+  .platform-card.bol::before { background: var(--bol); }
+  .platform-card.etsy::before { background: var(--etsy); }
+  .platform-card.vinted::before { background: var(--vinted); }
+
+  .platform-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .platform-name {
+    font-size: 0.7rem;
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.6rem;
+  }
+
+  .platform-card.bol .platform-name { color: var(--bol); }
+  .platform-card.etsy .platform-name { color: var(--etsy); }
+  .platform-card.vinted .platform-name { color: var(--vinted); }
+
+  .sell-price {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+
+  .price-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .breakdown {
+    border-top: 1px solid var(--border);
+    padding-top: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .breakdown-row.profit {
+    color: var(--green);
+    font-weight: 700;
+    margin-top: 0.2rem;
+    padding-top: 0.4rem;
+    border-top: 1px dashed #2a2a2a;
+  }
+
+  .breakdown-row.loss { color: var(--red); }
+
+  .profit-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    margin-top: 0.4rem;
+  }
+
+  .profit-badge.good { background: rgba(57,217,138,0.15); color: var(--green); }
+  .profit-badge.bad { background: rgba(255,77,77,0.15); color: var(--red); }
+  .profit-badge.neutral { background: rgba(136,136,136,0.15); color: var(--muted); }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1rem 0;
+  }
+
+  .totaal-kosten {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    margin-top: 1rem;
+  }
+
+  .totaal-kosten .val {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .results-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .results-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--bol), var(--etsy), var(--vinted));
+  }
+
+  .marge-input {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .marge-btn {
+    padding: 0.4rem 0.8rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .marge-btn:hover, .marge-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  footer {
+    margin-top: 3rem;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: #333;
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="container">
+
+  <header>
+    <div class="logo">⬡</div>
+    <div>
+      <h1>3D Print <span>Prijs</span>calculator</h1>
+      <p class="subtitle">// bol.com · etsy · vinted — kosten & winst</p>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- Productiekosten -->
+    <div class="card">
+      <div class="card-title">// 01 — Productiekosten</div>
+
+      <div class="input-group">
+        <label>Filament (gram) <span class="hint">gram gebruikt</span></label>
+        <input type="number" id="gram" value="50" min="0" step="1">
+      </div>
+      <div class="input-group">
+        <label>Prijs filament per kg <span class="hint">€/kg</span></label>
+        <div class="prefix-input"><span>€</span>
+          <input type="number" id="filamentprijs" value="22.50" min="0" step="0.5">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Printtijd (uren) <span class="hint">uren</span></label>
+        <input type="number" id="printtijd" value="3" min="0" step="0.25">
+      </div>
+      <div class="input-group">
+        <label>Stroomkosten per uur <span class="hint">€/uur printer</span></label>
+        <div class="prefix-input"><span>€</span>
+          <input type="number" id="stroom" value="0.30" min="0" step="0.01">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Arbeid per uur <span class="hint">€/uur jouw tijd</span></label>
+        <div class="prefix-input"><span>€</span>
+          <input type="number" id="arbeid" value="5" min="0" step="0.5">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Arbeidsuren <span class="hint">uren besteed</span></label>
+        <input type="number" id="arbeidsuren" value="0.5" min="0" step="0.25">
+      </div>
+      <div class="input-group">
+        <label>Verpakking & verzendmateriaal</label>
+        <div class="prefix-input"><span>€</span>
+          <input type="number" id="verpakking" value="0.50" min="0" step="0.10">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Overige kosten <span class="hint">mislukte prints etc.</span></label>
+        <div class="prefix-input"><span>€</span>
+          <input type="number" id="overig" value="0.25" min="0" step="0.05">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-label">printer afschrijving</div>
+      <div class="input-group">
+        <label>Aanschafprijs printer <span class="hint">€</span></label>
+        <div class="prefix-input"><span>€</span>
+          <input type="number" id="printer-prijs" value="850" min="0" step="10">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Levensduur printer (uren) <span class="hint">totaal</span></label>
+        <input type="number" id="printer-uren" value="4000" min="1" step="100">
+      </div>
+      <div class="totaal-kosten" style="margin-top:0.5rem; margin-bottom:0;">
+        <span>Afschrijving dit print</span>
+        <span class="val" id="afschrijving-toon">€ 0,00</span>
+      </div>
+
+      <div class="totaal-kosten">
+        <span>Totaal kostprijs</span>
+        <span class="val" id="totaal-kosten">€ 0,00</span>
+      </div>
+    </div>
+
+    <!-- Marge & verzending -->
+    <div class="card">
+      <div class="card-title">// 02 — Marge & Verzending</div>
+
+      <div class="section-label">gewenste winstmarge</div>
+      <div class="input-group">
+        <label>Winstmarge (%) <span class="hint">op kostprijs</span></label>
+        <input type="number" id="marge" value="40" min="0" step="5">
+      </div>
+      <div class="marge-input">
+        <button class="marge-btn" onclick="setMarge(20)">20%</button>
+        <button class="marge-btn" onclick="setMarge(30)">30%</button>
+        <button class="marge-btn active" onclick="setMarge(40)">40%</button>
+        <button class="marge-btn" onclick="setMarge(50)">50%</button>
+        <button class="marge-btn" onclick="setMarge(75)">75%</button>
+        <button class="marge-btn" onclick="setMarge(100)">100%</button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-label">verzendkosten per platform</div>
+
+      <div class="input-group">
+        <label>Bol.com verzendkosten</label>
+        <div class="prefix-input"><span>€</span>
+          <input type="number" id="verzend-bol" value="3.95" min="0" step="0.05">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Etsy verzendkosten</label>
+        <div class="prefix-input"><span>€</span>
+          <input type="number" id="verzend-etsy" value="4.50" min="0" step="0.05">
+        </div>
+      </div>
+
+
+      <div class="divider"></div>
+      <div class="section-label">platform commissies (standaard)</div>
+
+      <div class="input-group">
+        <label>Bol.com commissie (%) <span class="hint">12,4% standaard</span></label>
+        <input type="number" id="comm-bol" value="12.4" min="0" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>Bol.com vaste fee per artikel <span class="hint">€0,20</span></label>
+        <div class="prefix-input"><span>€</span>
+          <input type="number" id="comm-bol-vast" value="0.20" min="0" step="0.05">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Etsy commissie (%) <span class="hint">~6,5% + listing</span></label>
+        <input type="number" id="comm-etsy" value="6.5" min="0" step="0.5">
+      </div>
+
+    </div>
+
+    <!-- Resultaten -->
+    <div class="results-full">
+      <div class="results-card">
+        <div class="card-title">// 03 — Verkoopprijzen & Winst per Platform</div>
+        <div class="platform-cards">
+
+          <div class="platform-card bol">
+            <div class="platform-name">bol.com</div>
+            <div class="sell-price" id="prijs-bol">€ 0,00</div>
+            <div class="price-sub" id="badge-bol"></div>
+            <div class="breakdown">
+              <div class="breakdown-row"><span>Kostprijs</span><span id="b-bol-kostprijs">—</span></div>
+              <div class="breakdown-row"><span>Verzending (incl. in prijs)</span><span id="b-bol-verzend">—</span></div>
+              <div class="breakdown-row"><span>Commissie % + vast</span><span id="b-bol-comm">—</span></div>
+              <div class="breakdown-row"><span>Afschrijving</span><span id="b-bol-afschr">—</span></div>
+              <div class="breakdown-row profit"><span>Netto winst</span><span id="b-bol-winst">—</span></div>
+            </div>
+          </div>
+
+          <div class="platform-card etsy">
+            <div class="platform-name">Etsy</div>
+            <div class="sell-price" id="prijs-etsy">€ 0,00</div>
+            <div class="price-sub" id="badge-etsy"></div>
+            <div class="breakdown">
+              <div class="breakdown-row"><span>Kostprijs</span><span id="b-etsy-kostprijs">—</span></div>
+              <div class="breakdown-row"><span>Verzending</span><span id="b-etsy-verzend">—</span></div>
+              <div class="breakdown-row"><span>Commissie (berekend)</span><span id="b-etsy-comm">—</span></div>
+              <div class="breakdown-row"><span>Afschrijving</span><span id="b-etsy-afschr">—</span></div>
+              <div class="breakdown-row profit"><span>Netto winst</span><span id="b-etsy-winst">—</span></div>
+            </div>
+          </div>
+
+          <div class="platform-card vinted">
+            <div class="platform-name">Vinted</div>
+            <div class="sell-price" id="prijs-vinted">€ 0,00</div>
+            <div class="price-sub" id="badge-vinted"></div>
+            <div class="breakdown">
+              <div class="breakdown-row"><span>Kostprijs</span><span id="b-vinted-kostprijs">—</span></div>
+              <div class="breakdown-row"><span>Verzending</span><span style="color:var(--green);font-size:0.68rem">gratis voor verkoper</span></div>
+              <div class="breakdown-row"><span>Commissie</span><span style="color:var(--green);font-size:0.68rem">geen</span></div>
+              <div class="breakdown-row"><span>Afschrijving</span><span id="b-vinted-afschr">—</span></div>
+              <div class="breakdown-row profit"><span>Netto winst</span><span id="b-vinted-winst">—</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>// 3D Print Prijscalculator — alle bedragen incl. BTW indicatief</footer>
+</div>
+
+<script>
+function fmt(val) {
+  return '€ ' + val.toFixed(2).replace('.', ',');
+}
+
+function setMarge(val) {
+  document.getElementById('marge').value = val;
+  document.querySelectorAll('.marge-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.textContent) === val);
+  });
+  bereken();
+}
+
+function bereken() {
+  const gram = parseFloat(document.getElementById('gram').value) || 0;
+  const filamentprijs = parseFloat(document.getElementById('filamentprijs').value) || 0;
+  const printtijd = parseFloat(document.getElementById('printtijd').value) || 0;
+  const stroom = parseFloat(document.getElementById('stroom').value) || 0;
+  const arbeid = parseFloat(document.getElementById('arbeid').value) || 0;
+  const arbeidsuren = parseFloat(document.getElementById('arbeidsuren').value) || 0;
+  const verpakking = parseFloat(document.getElementById('verpakking').value) || 0;
+  const overig = parseFloat(document.getElementById('overig').value) || 0;
+  const printerPrijs = parseFloat(document.getElementById('printer-prijs').value) || 0;
+  const printerUren = parseFloat(document.getElementById('printer-uren').value) || 1;
+
+  const filamentKost = (gram / 1000) * filamentprijs;
+  const stroomKost = printtijd * stroom;
+  const arbeidKost = arbeidsuren * arbeid;
+  const afschrijving = (printerPrijs / printerUren) * printtijd;
+
+  // Kostprijs = alle kosten ZONDER afschrijving (afschrijving apart getoond)
+  const kostprijs = filamentKost + stroomKost + arbeidKost + verpakking + overig;
+  const totaalKosten = kostprijs + afschrijving;
+
+  document.getElementById('totaal-kosten').textContent = fmt(totaalKosten);
+  document.getElementById('afschrijving-toon').textContent = fmt(afschrijving);
+
+  const marge = parseFloat(document.getElementById('marge').value) || 0;
+  // Basisverkoopprijs gebaseerd op alle kosten incl afschrijving
+  const basisVerkoopprijs = totaalKosten * (1 + marge / 100);
+
+  // --- BOL ---
+  const verzendBol = parseFloat(document.getElementById('verzend-bol').value) || 0;
+  const commBolPerc = parseFloat(document.getElementById('comm-bol').value) || 0;
+  const commBolVast = parseFloat(document.getElementById('comm-bol-vast').value) || 0;
+  // Bol: prijs is incl. verzending. Commissie % wordt berekend over de verkoopprijs.
+  // verkoopprijs incl verzend zodat na commissie % + vast + verzend nog basisVerkoopprijs overblijft:
+  // verkoopprijs - verkoopprijs * commPerc/100 - commVast - verzend = basisVerkoopprijs
+  // verkoopprijs * (1 - commPerc/100) = basisVerkoopprijs + verzend + commVast
+  // verkoopprijs = (basisVerkoopprijs + verzend + commVast) / (1 - commPerc/100)
+  const bolPrijs = (basisVerkoopprijs + verzendBol + commBolVast) / (1 - commBolPerc / 100);
+  const bolCommissie = bolPrijs * (commBolPerc / 100) + commBolVast;
+  const bolWinst = bolPrijs - bolCommissie - verzendBol - totaalKosten;
+
+  document.getElementById('prijs-bol').textContent = fmt(bolPrijs);
+  document.getElementById('b-bol-kostprijs').textContent = fmt(kostprijs);
+  document.getElementById('b-bol-verzend').textContent = fmt(verzendBol);
+  document.getElementById('b-bol-comm').textContent = fmt(bolCommissie);
+  document.getElementById('b-bol-afschr').textContent = fmt(afschrijving);
+  const bolWinstEl = document.getElementById('b-bol-winst');
+  bolWinstEl.textContent = fmt(bolWinst);
+  bolWinstEl.parentElement.className = 'breakdown-row profit' + (bolWinst < 0 ? ' loss' : '');
+  const bolPct = totaalKosten > 0 ? (bolWinst / totaalKosten * 100) : 0;
+  document.getElementById('badge-bol').innerHTML = bolWinst >= 0
+    ? `<span class="profit-badge good">▲ ${bolPct.toFixed(0)}% marge</span>`
+    : `<span class="profit-badge bad">▼ verlies</span>`;
+
+  // --- ETSY ---
+  const verzendEtsy = parseFloat(document.getElementById('verzend-etsy').value) || 0;
+  const commEtsyPerc = parseFloat(document.getElementById('comm-etsy').value) || 0;
+  const etsyPrijs = basisVerkoopprijs / (1 - commEtsyPerc / 100) + verzendEtsy;
+  const etsyCommissie = (etsyPrijs - verzendEtsy) * (commEtsyPerc / 100);
+  const etsyWinst = etsyPrijs - etsyCommissie - verzendEtsy - totaalKosten;
+
+  document.getElementById('prijs-etsy').textContent = fmt(etsyPrijs);
+  document.getElementById('b-etsy-kostprijs').textContent = fmt(kostprijs);
+  document.getElementById('b-etsy-verzend').textContent = fmt(verzendEtsy);
+  document.getElementById('b-etsy-comm').textContent = fmt(etsyCommissie);
+  document.getElementById('b-etsy-afschr').textContent = fmt(afschrijving);
+  const etsyWinstEl = document.getElementById('b-etsy-winst');
+  etsyWinstEl.textContent = fmt(etsyWinst);
+  etsyWinstEl.parentElement.className = 'breakdown-row profit' + (etsyWinst < 0 ? ' loss' : '');
+  const etsyPct = totaalKosten > 0 ? (etsyWinst / totaalKosten * 100) : 0;
+  document.getElementById('badge-etsy').innerHTML = etsyWinst >= 0
+    ? `<span class="profit-badge good">▲ ${etsyPct.toFixed(0)}% marge</span>`
+    : `<span class="profit-badge bad">▼ verlies</span>`;
+
+  // --- VINTED ---
+  const vintedPrijs = basisVerkoopprijs;
+  const vintedWinst = vintedPrijs - totaalKosten;
+
+  document.getElementById('prijs-vinted').textContent = fmt(vintedPrijs);
+  document.getElementById('b-vinted-kostprijs').textContent = fmt(kostprijs);
+  document.getElementById('b-vinted-verzend').textContent = fmt(verzendVinted);
+  document.getElementById('b-vinted-comm').textContent = fmt(vintedCommissie);
+  document.getElementById('b-vinted-afschr').textContent = fmt(afschrijving);
+  const vintedWinstEl = document.getElementById('b-vinted-winst');
+  vintedWinstEl.textContent = fmt(vintedWinst);
+  vintedWinstEl.parentElement.className = 'breakdown-row profit' + (vintedWinst < 0 ? ' loss' : '');
+  const vintedPct = totaalKosten > 0 ? (vintedWinst / totaalKosten * 100) : 0;
+  document.getElementById('badge-vinted').innerHTML = vintedWinst >= 0
+    ? `<span class="profit-badge good">▲ ${vintedPct.toFixed(0)}% marge</span>`
+    : `<span class="profit-badge bad">▼ verlies</span>`;
+}
+
+// Live update
+document.querySelectorAll('input').forEach(el => {
+  el.addEventListener('input', bereken);
+});
+
+bereken();
+
+// PWA Service Worker registratie
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('Service Worker geregistreerd'))
+      .catch(err => console.log('SW fout:', err));
+  });
+}
+</script>
+</body>
+</html>
