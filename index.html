@@ -166,6 +166,11 @@
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
+  input[type="number"]::placeholder {
+    color: #444;
+    font-style: italic;
+  }
+
   input[type="number"]:focus {
     outline: none;
     border-color: var(--accent);
@@ -401,44 +406,44 @@
 
       <div class="input-group">
         <label>Filament (gram) <span class="hint">gram gebruikt</span></label>
-        <input type="number" id="gram" value="50" min="0" step="1">
+        <input type="number" id="gram" placeholder="bv. 50" min="0" step="1">
       </div>
       <div class="input-group">
         <label>Prijs filament per kg <span class="hint">€/kg</span></label>
         <div class="prefix-input"><span>€</span>
-          <input type="number" id="filamentprijs" value="22.50" min="0" step="0.5">
+          <input type="number" id="filamentprijs" placeholder="bv. 22.50" min="0" step="0.5">
         </div>
       </div>
       <div class="input-group">
         <label>Printtijd (uren) <span class="hint">uren</span></label>
-        <input type="number" id="printtijd" value="3" min="0" step="0.25">
+        <input type="number" id="printtijd" placeholder="bv. 3" min="0" step="0.25">
       </div>
       <div class="input-group">
         <label>Stroomkosten per uur <span class="hint">€/uur printer</span></label>
         <div class="prefix-input"><span>€</span>
-          <input type="number" id="stroom" value="0.30" min="0" step="0.01">
+          <input type="number" id="stroom" placeholder="bv. 0.30" min="0" step="0.01">
         </div>
       </div>
       <div class="input-group">
         <label>Arbeid per uur <span class="hint">€/uur jouw tijd</span></label>
         <div class="prefix-input"><span>€</span>
-          <input type="number" id="arbeid" value="5" min="0" step="0.5">
+          <input type="number" id="arbeid" placeholder="bv. 5" min="0" step="0.5">
         </div>
       </div>
       <div class="input-group">
         <label>Arbeidsuren <span class="hint">uren besteed</span></label>
-        <input type="number" id="arbeidsuren" value="0.5" min="0" step="0.25">
+        <input type="number" id="arbeidsuren" placeholder="bv. 0.5" min="0" step="0.25">
       </div>
       <div class="input-group">
         <label>Verpakking & verzendmateriaal</label>
         <div class="prefix-input"><span>€</span>
-          <input type="number" id="verpakking" value="0.50" min="0" step="0.10">
+          <input type="number" id="verpakking" placeholder="bv. 0.50" min="0" step="0.10">
         </div>
       </div>
       <div class="input-group">
         <label>Overige kosten <span class="hint">mislukte prints etc.</span></label>
         <div class="prefix-input"><span>€</span>
-          <input type="number" id="overig" value="0.25" min="0" step="0.05">
+          <input type="number" id="overig" placeholder="bv. 0.25" min="0" step="0.05">
         </div>
       </div>
 
@@ -447,12 +452,12 @@
       <div class="input-group">
         <label>Aanschafprijs printer <span class="hint">€</span></label>
         <div class="prefix-input"><span>€</span>
-          <input type="number" id="printer-prijs" value="850" min="0" step="10">
+          <input type="number" id="printer-prijs" placeholder="bv. 850" min="0" step="10">
         </div>
       </div>
       <div class="input-group">
         <label>Levensduur printer (uren) <span class="hint">totaal</span></label>
-        <input type="number" id="printer-uren" value="4000" min="1" step="100">
+        <input type="number" id="printer-uren" placeholder="bv. 4000" min="1" step="100">
       </div>
       <div class="totaal-kosten" style="margin-top:0.5rem; margin-bottom:0;">
         <span>Afschrijving dit print</span>
@@ -472,12 +477,12 @@
       <div class="section-label">gewenste winstmarge</div>
       <div class="input-group">
         <label>Winstmarge (%) <span class="hint">op kostprijs</span></label>
-        <input type="number" id="marge" value="40" min="0" step="5">
+        <input type="number" id="marge" placeholder="bv. 40" min="0" step="5">
       </div>
       <div class="marge-input">
         <button class="marge-btn" onclick="setMarge(20)">20%</button>
         <button class="marge-btn" onclick="setMarge(30)">30%</button>
-        <button class="marge-btn active" onclick="setMarge(40)">40%</button>
+        <button class="marge-btn" onclick="setMarge(40)">40%</button>
         <button class="marge-btn" onclick="setMarge(50)">50%</button>
         <button class="marge-btn" onclick="setMarge(75)">75%</button>
         <button class="marge-btn" onclick="setMarge(100)">100%</button>
