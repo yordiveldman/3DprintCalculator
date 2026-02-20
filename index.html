@@ -2,703 +2,382 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>3D Print Prijscalculator</title>
-<meta name="description" content="Bereken verkoopprijzen voor je 3D prints op Bol.com, Etsy en Vinted.">
-<meta name="theme-color" content="#ff6b35">
+<meta name="theme-color" content="#0f172a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="3D Prijs">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0d0d0d;
-    --surface: #161616;
-    --surface2: #1f1f1f;
-    --border: #2a2a2a;
-    --accent: #ff6b35;
-    --accent2: #ffb347;
-    --text: #f0f0f0;
-    --muted: #888;
-    --bol: #0072ef;
-    --etsy: #f16521;
-    --vinted: #09b1ba;
-    --green: #39d98a;
-    --red: #ff4d4d;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-    padding: 2rem 1rem;
-  }
-
-  .grid-bg {
-    position: fixed; inset: 0; z-index: 0;
-    background-image: 
-      linear-gradient(rgba(255,107,53,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,107,53,0.04) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-  }
-
-  .container {
-    max-width: 960px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-  }
-
-  header {
-    margin-bottom: 3rem;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-  }
-
-  .logo {
-    width: 56px; height: 56px;
-    background: var(--accent);
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.6rem;
-    flex-shrink: 0;
-    animation: pulse 3s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-
-  h1 {
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
-    font-weight: 800;
-    line-height: 1;
-  }
-
-  h1 span { color: var(--accent); }
-
-  .subtitle {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-top: 0.4rem;
-  }
-
-  .layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-  }
-
-  @media (max-width: 680px) {
-    .layout { grid-template-columns: 1fr; }
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.5rem;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-
-  .card:hover { border-color: #3a3a3a; }
-
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-  }
-
-  .card-title {
-    font-size: 0.75rem;
-    font-family: 'Space Mono', monospace;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 1.2rem;
-  }
-
-  .input-group {
-    margin-bottom: 1rem;
-  }
-
-  label {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.85rem;
-    color: var(--muted);
-    margin-bottom: 0.4rem;
-  }
-
-  label .hint {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    color: #555;
-  }
-
-  input[type="number"] {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.65rem 1rem;
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.95rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    -moz-appearance: textfield;
-  }
-
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
-
-  input[type="number"]::placeholder {
-    color: #444;
-    font-style: italic;
-  }
-
-  input[type="number"]:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(255,107,53,0.12);
-  }
-
-  .prefix-input {
-    position: relative;
-  }
-
-  .prefix-input span {
-    position: absolute;
-    left: 12px; top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.85rem;
-    pointer-events: none;
-  }
-
-  .prefix-input input { padding-left: 1.8rem; }
-
-  .results-full {
-    grid-column: 1 / -1;
-  }
-
-  .platform-cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin-top: 0;
-  }
-
-  @media (max-width: 680px) {
-    .platform-cards { grid-template-columns: 1fr; }
-    .results-full { grid-column: 1; }
-  }
-
-  .platform-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1.4rem;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-
-  .platform-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-  }
-
-  .platform-card.bol::before { background: var(--bol); }
-  .platform-card.etsy::before { background: var(--etsy); }
-  .platform-card.vinted::before { background: var(--vinted); }
-
-  .platform-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-  }
-
-  .platform-name {
-    font-size: 0.7rem;
-    font-family: 'Space Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 0.6rem;
-  }
-
-  .platform-card.bol .platform-name { color: var(--bol); }
-  .platform-card.etsy .platform-name { color: var(--etsy); }
-  .platform-card.vinted .platform-name { color: var(--vinted); }
-
-  .sell-price {
-    font-size: 2rem;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 0.3rem;
-  }
-
-  .price-sub {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    color: var(--muted);
-    margin-bottom: 1rem;
-  }
-
-  .breakdown {
-    border-top: 1px solid var(--border);
-    padding-top: 0.8rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .breakdown-row {
-    display: flex;
-    justify-content: space-between;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--muted);
-  }
-
-  .breakdown-row.profit {
-    color: var(--green);
-    font-weight: 700;
-    margin-top: 0.2rem;
-    padding-top: 0.4rem;
-    border-top: 1px dashed #2a2a2a;
-  }
-
-  .breakdown-row.loss { color: var(--red); }
-
-  .profit-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.65rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: 20px;
-    margin-top: 0.4rem;
-  }
-
-  .profit-badge.good { background: rgba(57,217,138,0.15); color: var(--green); }
-  .profit-badge.bad { background: rgba(255,77,77,0.15); color: var(--red); }
-  .profit-badge.neutral { background: rgba(136,136,136,0.15); color: var(--muted); }
-
-  .section-label {
-    font-size: 0.7rem;
-    font-family: 'Space Mono', monospace;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 1rem;
-  }
-
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin: 1rem 0;
-  }
-
-  .totaal-kosten {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 0.8rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    margin-top: 1rem;
-  }
-
-  .totaal-kosten .val {
-    color: var(--accent);
-    font-weight: 700;
-    font-size: 1rem;
-  }
-
-  .results-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.5rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .results-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--bol), var(--etsy), var(--vinted));
-  }
-
-  .marge-input {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 1rem;
-  }
-
-  .marge-btn {
-    padding: 0.4rem 0.8rem;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--muted);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .marge-btn:hover, .marge-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-  }
-
-  footer {
-    margin-top: 3rem;
-    text-align: center;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    color: #333;
-  }
+:root{--bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;--accent:#2563eb;--accent-bg:#eff6ff;--green:#16a34a;--green-bg:#f0fdf4;--green-bd:#bbf7d0;--red:#dc2626;--red-bg:#fef2f2;--red-bd:#fecaca;--yellow:#ca8a04;--yellow-bg:#fefce8;--yellow-bd:#fef08a;--r:14px;--rs:8px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;font-size:15px;line-height:1.5;min-height:100vh;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.header{background:#0f172a;padding:16px 16px 20px;padding-top:calc(16px + env(safe-area-inset-top))}
+.header-inner{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.hicon{width:42px;height:42px;border-radius:11px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.header h1{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.2px}
+.header p{font-size:12px;color:#94a3b8;margin-top:1px}
+.main{max-width:640px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.card-header{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:#fafbfc}
+.step{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-title{font-size:14px;font-weight:600}
+.card-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.isec{padding:0 16px}
+.slabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:12px 0 6px;border-bottom:1px solid var(--border)}
+.irow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.irow:last-child{border-bottom:none}
+.ilbl{flex:1}
+.ilbl span{font-size:14px;font-weight:500;display:block}
+.ilbl small{font-size:11px;color:var(--muted)}
+.ifield{position:relative;flex-shrink:0}
+.ifield .pre{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none;z-index:1}
+.ifield .suf{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);pointer-events:none;z-index:1}
+input[type=number]{width:108px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rs);padding:9px 10px;font-size:14px;font-family:inherit;font-weight:500;color:var(--text);text-align:right;transition:border-color .15s,box-shadow .15s,background .15s;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+input[type=number]:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.12);background:#fff}
+input[type=number]::placeholder{color:#cbd5e1;font-weight:400}
+.ifield.hp input{padding-left:22px;text-align:left}
+.ifield.hs input{padding-right:28px}
+.cost-summary{background:#f8fafc;border-top:1px solid var(--border);padding:12px 16px}
+.crow{display:flex;justify-content:space-between;align-items:center;padding:3px 0}
+.crow .l{font-size:13px;color:var(--muted)}
+.crow .v{font-size:13px;font-weight:600;color:var(--text)}
+.ctotal{margin-top:8px;padding-top:10px;border-top:1px solid var(--border)}
+.ctotal .l{font-size:14px;font-weight:700;color:var(--text)}
+.ctotal .v{font-size:22px;font-weight:800;color:var(--accent)}
+.mwrap{padding:14px 16px}
+.mrow{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.mrow label{font-size:14px;font-weight:500;flex:1}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{padding:7px 15px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;font-family:inherit}
+.pill:hover{border-color:var(--accent);color:var(--accent)}
+.pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+.ptog{border:2px solid var(--border);border-radius:12px;padding:13px 12px;cursor:pointer;background:var(--bg);position:relative;transition:all .15s;user-select:none}
+.ptog input{position:absolute;opacity:0;width:0;height:0}
+.ptog-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px}
+.ptog-sub{font-size:11px;color:var(--muted)}
+.ptog-chk{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;transition:all .15s}
+.ptog.on{border-color:var(--accent);background:var(--accent-bg)}
+.ptog.on .ptog-name{color:var(--accent)}
+.ptog.on .ptog-chk{background:var(--accent);border-color:var(--accent)}
+.pdet{display:none;border-top:1px solid var(--border)}
+.pdet.open{display:block}
+.pdet-title{padding:10px 16px 4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+.rempty{padding:32px 16px;text-align:center;color:var(--muted);font-size:14px;line-height:1.8}
+.rempty span{font-size:32px;display:block;margin-bottom:8px}
+.rblock{border-bottom:1px solid var(--border)}
+.rblock:last-of-type{border-bottom:none}
+.rtop{padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:flex-start}
+.rname{font-size:15px;font-weight:700}
+.rright{text-align:right}
+.rprice{font-size:28px;font-weight:800;color:var(--accent);line-height:1}
+.rprice-note{font-size:11px;color:var(--muted);margin-top:3px}
+.rrows{padding:0 16px 10px;display:flex;flex-direction:column;gap:5px}
+.rrow{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.rrow.total{font-size:14px;font-weight:700;border-top:1px dashed var(--border);padding-top:8px;margin-top:4px}
+.rrow.total.pos{color:var(--green)}
+.rrow.total.neg{color:var(--red)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;margin:0 16px 14px}
+.badge.best{background:var(--accent-bg);color:var(--accent);border:1px solid #bfdbfe}
+.badge.good{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.badge.warn{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-bd)}
+.badge.bad{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.advies{margin:0 16px 16px;border-radius:10px;padding:14px;font-size:13px;line-height:1.7}
+.advies.good{background:var(--green-bg);border:1px solid var(--green-bd)}
+.advies.warn{background:var(--yellow-bg);border:1px solid var(--yellow-bd)}
+.advies.bad{background:var(--red-bg);border:1px solid var(--red-bd)}
+.advies-title{font-weight:700;font-size:14px;margin-bottom:5px}
+.advies.good .advies-title{color:var(--green)}
+.advies.warn .advies-title{color:var(--yellow)}
+.advies.bad .advies-title{color:var(--red)}
+footer{text-align:center;padding:16px;font-size:12px;color:#94a3b8}
+.green-txt{font-size:13px;font-weight:600;color:var(--green);padding:9px 0}
 </style>
 </head>
 <body>
-<div class="grid-bg"></div>
-<div class="container">
-
-  <header>
-    <div class="logo">⬡</div>
+<div class="header">
+  <div class="header-inner">
+    <div class="hicon">⬡</div>
     <div>
-      <h1>3D Print <span>Prijs</span>calculator</h1>
-      <p class="subtitle">// bol.com · etsy · vinted — kosten & winst</p>
+      <h1>3D Print Prijscalculator</h1>
+      <p>Kostprijs · Verkoopprijs · Winst per platform</p>
     </div>
-  </header>
-
-  <div class="layout">
-
-    <!-- Productiekosten -->
-    <div class="card">
-      <div class="card-title">// 01 — Productiekosten</div>
-
-      <div class="input-group">
-        <label>Filament (gram) <span class="hint">gram gebruikt</span></label>
-        <input type="number" id="gram" placeholder="bv. 50" min="0" step="1">
-      </div>
-      <div class="input-group">
-        <label>Prijs filament per kg <span class="hint">€/kg</span></label>
-        <div class="prefix-input"><span>€</span>
-          <input type="number" id="filamentprijs" placeholder="bv. 22.50" min="0" step="0.5">
-        </div>
-      </div>
-      <div class="input-group">
-        <label>Printtijd (uren) <span class="hint">uren</span></label>
-        <input type="number" id="printtijd" placeholder="bv. 3" min="0" step="0.25">
-      </div>
-      <div class="input-group">
-        <label>Stroomkosten per uur <span class="hint">€/uur printer</span></label>
-        <div class="prefix-input"><span>€</span>
-          <input type="number" id="stroom" placeholder="bv. 0.30" min="0" step="0.01">
-        </div>
-      </div>
-      <div class="input-group">
-        <label>Arbeid per uur <span class="hint">€/uur jouw tijd</span></label>
-        <div class="prefix-input"><span>€</span>
-          <input type="number" id="arbeid" placeholder="bv. 5" min="0" step="0.5">
-        </div>
-      </div>
-      <div class="input-group">
-        <label>Arbeidsuren <span class="hint">uren besteed</span></label>
-        <input type="number" id="arbeidsuren" placeholder="bv. 0.5" min="0" step="0.25">
-      </div>
-      <div class="input-group">
-        <label>Verpakking & verzendmateriaal</label>
-        <div class="prefix-input"><span>€</span>
-          <input type="number" id="verpakking" placeholder="bv. 0.50" min="0" step="0.10">
-        </div>
-      </div>
-      <div class="input-group">
-        <label>Overige kosten <span class="hint">mislukte prints etc.</span></label>
-        <div class="prefix-input"><span>€</span>
-          <input type="number" id="overig" placeholder="bv. 0.25" min="0" step="0.05">
-        </div>
-      </div>
-
-      <div class="divider"></div>
-      <div class="section-label">printer afschrijving</div>
-      <div class="input-group">
-        <label>Aanschafprijs printer <span class="hint">€</span></label>
-        <div class="prefix-input"><span>€</span>
-          <input type="number" id="printer-prijs" placeholder="bv. 850" min="0" step="10">
-        </div>
-      </div>
-      <div class="input-group">
-        <label>Levensduur printer (uren) <span class="hint">totaal</span></label>
-        <input type="number" id="printer-uren" placeholder="bv. 4000" min="1" step="100">
-      </div>
-      <div class="totaal-kosten" style="margin-top:0.5rem; margin-bottom:0;">
-        <span>Afschrijving dit print</span>
-        <span class="val" id="afschrijving-toon">€ 0,00</span>
-      </div>
-
-      <div class="totaal-kosten">
-        <span>Totaal kostprijs</span>
-        <span class="val" id="totaal-kosten">€ 0,00</span>
-      </div>
-    </div>
-
-    <!-- Marge & verzending -->
-    <div class="card">
-      <div class="card-title">// 02 — Marge & Verzending</div>
-
-      <div class="section-label">gewenste winstmarge</div>
-      <div class="input-group">
-        <label>Winstmarge (%) <span class="hint">op kostprijs</span></label>
-        <input type="number" id="marge" placeholder="bv. 40" min="0" step="5">
-      </div>
-      <div class="marge-input">
-        <button class="marge-btn" onclick="setMarge(20)">20%</button>
-        <button class="marge-btn" onclick="setMarge(30)">30%</button>
-        <button class="marge-btn" onclick="setMarge(40)">40%</button>
-        <button class="marge-btn" onclick="setMarge(50)">50%</button>
-        <button class="marge-btn" onclick="setMarge(75)">75%</button>
-        <button class="marge-btn" onclick="setMarge(100)">100%</button>
-      </div>
-
-      <div class="divider"></div>
-      <div class="section-label">verzendkosten per platform</div>
-
-      <div class="input-group">
-        <label>Bol.com verzendkosten</label>
-        <div class="prefix-input"><span>€</span>
-          <input type="number" id="verzend-bol" placeholder="bv. 3.95" min="0" step="0.05">
-        </div>
-      </div>
-      <div class="input-group">
-        <label>Etsy verzendkosten</label>
-        <div class="prefix-input"><span>€</span>
-          <input type="number" id="verzend-etsy" placeholder="bv. 4.50" min="0" step="0.05">
-        </div>
-      </div>
-
-
-      <div class="divider"></div>
-      <div class="section-label">platform commissies (standaard)</div>
-
-      <div class="input-group">
-        <label>Bol.com commissie (%) <span class="hint">12,4% standaard</span></label>
-        <input type="number" id="comm-bol" value="12.4" min="0" step="0.1">
-      </div>
-      <div class="input-group">
-        <label>Bol.com vaste fee per artikel <span class="hint">€0,20</span></label>
-        <div class="prefix-input"><span>€</span>
-          <input type="number" id="comm-bol-vast" value="0.20" min="0" step="0.05">
-        </div>
-      </div>
-      <div class="input-group">
-        <label>Etsy commissie (%) <span class="hint">~6,5% + listing</span></label>
-        <input type="number" id="comm-etsy" value="6.5" min="0" step="0.5">
-      </div>
-
-    </div>
-
-    <!-- Resultaten -->
-    <div class="results-full">
-      <div class="results-card">
-        <div class="card-title">// 03 — Verkoopprijzen & Winst per Platform</div>
-        <div class="platform-cards">
-
-          <div class="platform-card bol">
-            <div class="platform-name">bol.com</div>
-            <div class="sell-price" id="prijs-bol">€ 0,00</div>
-            <div class="price-sub" id="badge-bol"></div>
-            <div class="breakdown">
-              <div class="breakdown-row"><span>Kostprijs</span><span id="b-bol-kostprijs">—</span></div>
-              <div class="breakdown-row"><span>Verzending (incl. in prijs)</span><span id="b-bol-verzend">—</span></div>
-              <div class="breakdown-row"><span>Commissie % + vast</span><span id="b-bol-comm">—</span></div>
-              <div class="breakdown-row"><span>Afschrijving</span><span id="b-bol-afschr">—</span></div>
-              <div class="breakdown-row profit"><span>Netto winst</span><span id="b-bol-winst">—</span></div>
-            </div>
-          </div>
-
-          <div class="platform-card etsy">
-            <div class="platform-name">Etsy</div>
-            <div class="sell-price" id="prijs-etsy">€ 0,00</div>
-            <div class="price-sub" id="badge-etsy"></div>
-            <div class="breakdown">
-              <div class="breakdown-row"><span>Kostprijs</span><span id="b-etsy-kostprijs">—</span></div>
-              <div class="breakdown-row"><span>Verzending</span><span id="b-etsy-verzend">—</span></div>
-              <div class="breakdown-row"><span>Commissie (berekend)</span><span id="b-etsy-comm">—</span></div>
-              <div class="breakdown-row"><span>Afschrijving</span><span id="b-etsy-afschr">—</span></div>
-              <div class="breakdown-row profit"><span>Netto winst</span><span id="b-etsy-winst">—</span></div>
-            </div>
-          </div>
-
-          <div class="platform-card vinted">
-            <div class="platform-name">Vinted</div>
-            <div class="sell-price" id="prijs-vinted">€ 0,00</div>
-            <div class="price-sub" id="badge-vinted"></div>
-            <div class="breakdown">
-              <div class="breakdown-row"><span>Kostprijs</span><span id="b-vinted-kostprijs">—</span></div>
-              <div class="breakdown-row"><span>Verzending</span><span style="color:var(--green);font-size:0.68rem">gratis voor verkoper</span></div>
-              <div class="breakdown-row"><span>Commissie</span><span style="color:var(--green);font-size:0.68rem">geen</span></div>
-              <div class="breakdown-row"><span>Afschrijving</span><span id="b-vinted-afschr">—</span></div>
-              <div class="breakdown-row profit"><span>Netto winst</span><span id="b-vinted-winst">—</span></div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
   </div>
-
-  <footer>// 3D Print Prijscalculator — alle bedragen incl. BTW indicatief</footer>
 </div>
 
+<div class="main">
+
+  <!-- STAP 1 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step">1</div>
+      <div><div class="card-title">Productiekosten</div><div class="card-sub">Vul de kosten in voor dit artikel</div></div>
+    </div>
+    <div class="isec">
+      <div class="slabel">Materiaal</div>
+      <div class="irow">
+        <div class="ilbl"><span>Filament gebruikt</span><small>gram</small></div>
+        <div class="ifield hs"><input type="number" id="gram" placeholder="0" min="0" step="1"><span class="suf">g</span></div>
+      </div>
+      <div class="irow">
+        <div class="ilbl"><span>Prijs filament</span><small>per kilogram</small></div>
+        <div class="ifield hp"><span class="pre">€</span><input type="number" id="filamentprijs" placeholder="0,00" min="0" step="0.5"></div>
+      </div>
+      <div class="slabel">Energie &amp; Tijd</div>
+      <div class="irow">
+        <div class="ilbl"><span>Printtijd</span><small>in uren</small></div>
+        <div class="ifield hs"><input type="number" id="printtijd" placeholder="0" min="0" step="0.25"><span class="suf">u</span></div>
+      </div>
+      <div class="irow">
+        <div class="ilbl"><span>Stroom per uur</span><small>kosten printer</small></div>
+        <div class="ifield hp"><span class="pre">€</span><input type="number" id="stroom" placeholder="0,00" min="0" step="0.01"></div>
+      </div>
+      <div class="irow">
+        <div class="ilbl"><span>Uurtarief arbeid</span><small>jouw tijd</small></div>
+        <div class="ifield hp"><span class="pre">€</span><input type="number" id="arbeid" placeholder="0,00" min="0" step="0.5"></div>
+      </div>
+      <div class="irow">
+        <div class="ilbl"><span>Arbeidsuren</span><small>bestede uren</small></div>
+        <div class="ifield hs"><input type="number" id="arbeidsuren" placeholder="0" min="0" step="0.25"><span class="suf">u</span></div>
+      </div>
+      <div class="slabel">Overig</div>
+      <div class="irow">
+        <div class="ilbl"><span>Verpakking</span><small>dozen, folie, tape</small></div>
+        <div class="ifield hp"><span class="pre">€</span><input type="number" id="verpakking" placeholder="0,00" min="0" step="0.1"></div>
+      </div>
+      <div class="irow">
+        <div class="ilbl"><span>Overige kosten</span><small>mislukte prints etc.</small></div>
+        <div class="ifield hp"><span class="pre">€</span><input type="number" id="overig" placeholder="0,00" min="0" step="0.05"></div>
+      </div>
+      <div class="slabel">Printer afschrijving</div>
+      <div class="irow">
+        <div class="ilbl"><span>Aanschafprijs printer</span></div>
+        <div class="ifield hp"><span class="pre">€</span><input type="number" id="printer-prijs" placeholder="0" min="0" step="10"></div>
+      </div>
+      <div class="irow">
+        <div class="ilbl"><span>Levensduur printer</span><small>geschatte uren</small></div>
+        <div class="ifield hs"><input type="number" id="printer-uren" placeholder="0" min="1" step="100"><span class="suf">u</span></div>
+      </div>
+    </div>
+    <div class="cost-summary">
+      <div class="crow"><span class="l">Materiaalkosten</span><span class="v" id="s-mat">€ 0,00</span></div>
+      <div class="crow"><span class="l">Energie &amp; arbeid</span><span class="v" id="s-eng">€ 0,00</span></div>
+      <div class="crow"><span class="l">Afschrijving printer</span><span class="v" id="s-afs">€ 0,00</span></div>
+      <div class="crow"><span class="l">Overig</span><span class="v" id="s-ov">€ 0,00</span></div>
+      <div class="crow ctotal"><span class="l">Totale kostprijs</span><span class="v" id="totaal">€ 0,00</span></div>
+    </div>
+  </div>
+
+  <!-- STAP 2 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step">2</div>
+      <div><div class="card-title">Gewenste winstmarge</div><div class="card-sub">Percentage bovenop de totale kostprijs</div></div>
+    </div>
+    <div class="mwrap">
+      <div class="mrow">
+        <label>Winstmarge</label>
+        <div class="ifield hs"><input type="number" id="marge" placeholder="0" min="0" step="5" style="width:90px"><span class="suf">%</span></div>
+      </div>
+      <div class="pills">
+        <button class="pill" onclick="setM(20)">20%</button>
+        <button class="pill" onclick="setM(30)">30%</button>
+        <button class="pill" onclick="setM(40)">40%</button>
+        <button class="pill" onclick="setM(50)">50%</button>
+        <button class="pill" onclick="setM(75)">75%</button>
+        <button class="pill" onclick="setM(100)">100%</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAP 3 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step">3</div>
+      <div><div class="card-title">Verkoopplatform(s)</div><div class="card-sub">Vink aan waar je wilt verkopen</div></div>
+    </div>
+    <div class="pgrid">
+      <div class="ptog" id="pt-bol" onclick="tp('bol')"><input type="checkbox"><div class="ptog-name">Bol.com</div><div class="ptog-sub">% + vaste fee</div><div class="ptog-chk">✓</div></div>
+      <div class="ptog" id="pt-etsy" onclick="tp('etsy')"><input type="checkbox"><div class="ptog-name">Etsy</div><div class="ptog-sub">% commissie</div><div class="ptog-chk">✓</div></div>
+      <div class="ptog" id="pt-amazon" onclick="tp('amazon')"><input type="checkbox"><div class="ptog-name">Amazon</div><div class="ptog-sub">% + kosten</div><div class="ptog-chk">✓</div></div>
+      <div class="ptog" id="pt-vinted" onclick="tp('vinted')"><input type="checkbox"><div class="ptog-name">Vinted</div><div class="ptog-sub">Geen commissie</div><div class="ptog-chk">✓</div></div>
+      <div class="ptog" id="pt-eigen" onclick="tp('eigen')"><input type="checkbox"><div class="ptog-name">Eigen / Direct</div><div class="ptog-sub">Zelf instellen</div><div class="ptog-chk">✓</div></div>
+    </div>
+
+    <div class="pdet" id="pd-bol">
+      <div class="pdet-title">Bol.com — instellingen</div>
+      <div class="isec">
+        <div class="irow"><div class="ilbl"><span>Commissie</span></div><div class="ifield hs"><input type="number" id="bol-perc" value="12.4" min="0" step="0.1"><span class="suf">%</span></div></div>
+        <div class="irow"><div class="ilbl"><span>Vaste fee per artikel</span></div><div class="ifield hp"><span class="pre">€</span><input type="number" id="bol-vast" value="0.20" min="0" step="0.05"></div></div>
+        <div class="irow"><div class="ilbl"><span>Verzendkosten</span><small>inbegrepen in verkoopprijs</small></div><div class="ifield hp"><span class="pre">€</span><input type="number" id="bol-verzend" placeholder="0,00" min="0" step="0.05"></div></div>
+      </div>
+    </div>
+
+    <div class="pdet" id="pd-etsy">
+      <div class="pdet-title">Etsy — instellingen</div>
+      <div class="isec">
+        <div class="irow"><div class="ilbl"><span>Commissie</span></div><div class="ifield hs"><input type="number" id="etsy-perc" value="6.5" min="0" step="0.1"><span class="suf">%</span></div></div>
+        <div class="irow"><div class="ilbl"><span>Verzendkosten</span></div><div class="ifield hp"><span class="pre">€</span><input type="number" id="etsy-verzend" placeholder="0,00" min="0" step="0.05"></div></div>
+      </div>
+    </div>
+
+    <div class="pdet" id="pd-amazon">
+      <div class="pdet-title">Amazon — instellingen</div>
+      <div class="isec">
+        <div class="irow"><div class="ilbl"><span>Commissie</span></div><div class="ifield hs"><input type="number" id="amazon-perc" value="15" min="0" step="0.5"><span class="suf">%</span></div></div>
+        <div class="irow"><div class="ilbl"><span>Vaste fee per artikel</span></div><div class="ifield hp"><span class="pre">€</span><input type="number" id="amazon-vast" placeholder="0,00" min="0" step="0.05"></div></div>
+        <div class="irow"><div class="ilbl"><span>Verzendkosten</span></div><div class="ifield hp"><span class="pre">€</span><input type="number" id="amazon-verzend" placeholder="0,00" min="0" step="0.05"></div></div>
+      </div>
+    </div>
+
+    <div class="pdet" id="pd-vinted">
+      <div class="pdet-title">Vinted — instellingen</div>
+      <div class="isec">
+        <div class="irow"><div class="ilbl"><span>Commissie</span></div><div class="green-txt">Geen ✓</div></div>
+        <div class="irow"><div class="ilbl"><span>Verzending</span></div><div class="green-txt">Gratis voor verkoper ✓</div></div>
+      </div>
+    </div>
+
+    <div class="pdet" id="pd-eigen">
+      <div class="pdet-title">Eigen / Direct — instellingen</div>
+      <div class="isec">
+        <div class="irow"><div class="ilbl"><span>Commissie</span><small>marktplaats, shop etc.</small></div><div class="ifield hs"><input type="number" id="eigen-perc" placeholder="0" min="0" step="0.5"><span class="suf">%</span></div></div>
+        <div class="irow"><div class="ilbl"><span>Vaste kosten</span><small>transactie, listing etc.</small></div><div class="ifield hp"><span class="pre">€</span><input type="number" id="eigen-vast" placeholder="0,00" min="0" step="0.05"></div></div>
+        <div class="irow"><div class="ilbl"><span>Verzendkosten</span></div><div class="ifield hp"><span class="pre">€</span><input type="number" id="eigen-verzend" placeholder="0,00" min="0" step="0.05"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAP 4 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step">4</div>
+      <div><div class="card-title">Resultaten &amp; Advies</div><div class="card-sub">Aanbevolen verkoopprijs per platform</div></div>
+    </div>
+    <div id="rb">
+      <div class="rempty"><span>📊</span>Selecteer één of meerdere platforms in stap 3 om de berekening te zien.</div>
+    </div>
+  </div>
+
+</div>
+<footer>3D Print Prijscalculator — berekeningen zijn indicatief</footer>
+
 <script>
-function fmt(val) {
-  return '€ ' + val.toFixed(2).replace('.', ',');
+const act = new Set();
+const nm  = {bol:'Bol.com',etsy:'Etsy',amazon:'Amazon',vinted:'Vinted',eigen:'Eigen / Direct'};
+
+function tp(p) {
+  const el = document.getElementById('pt-'+p);
+  const pd = document.getElementById('pd-'+p);
+  if (act.has(p)) { act.delete(p); el.classList.remove('on'); pd.classList.remove('open'); }
+  else { act.add(p); el.classList.add('on'); pd.classList.add('open'); }
+  calc();
 }
 
-function setMarge(val) {
-  document.getElementById('marge').value = val;
-  document.querySelectorAll('.marge-btn').forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.textContent) === val);
+function setM(v) {
+  document.getElementById('marge').value = v;
+  document.querySelectorAll('.pill').forEach(b => b.classList.toggle('on', parseInt(b.textContent) === v));
+  calc();
+}
+
+function g(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+function fmt(v) { return '\u20AC\u00a0' + v.toFixed(2).replace('.',','); }
+
+function calc() {
+  const mat = (g('gram')/1000)*g('filamentprijs');
+  const eng = g('printtijd')*g('stroom') + g('arbeidsuren')*g('arbeid');
+  const afs = g('printer-uren')>0 ? (g('printer-prijs')/g('printer-uren'))*g('printtijd') : 0;
+  const ov  = g('verpakking')+g('overig');
+  const tot = mat+eng+afs+ov;
+
+  document.getElementById('s-mat').textContent = fmt(mat);
+  document.getElementById('s-eng').textContent = fmt(eng);
+  document.getElementById('s-afs').textContent = fmt(afs);
+  document.getElementById('s-ov').textContent  = fmt(ov);
+  document.getElementById('totaal').textContent = fmt(tot);
+
+  const basis = tot * (1 + g('marge')/100);
+
+  if (!act.size) {
+    document.getElementById('rb').innerHTML = '<div class="rempty"><span>📊</span>Selecteer één of meerdere platforms in stap 3 om de berekening te zien.</div>';
+    return;
+  }
+
+  const res = [];
+  act.forEach(p => {
+    let vp, comm, verzend;
+    if (p==='bol') {
+      verzend=g('bol-verzend'); const perc=g('bol-perc')/100, vast=g('bol-vast');
+      vp=(basis+verzend+vast)/(1-perc); comm=vp*perc+vast;
+    } else if (p==='etsy') {
+      verzend=g('etsy-verzend'); const perc=g('etsy-perc')/100;
+      vp=basis/(1-perc)+verzend; comm=(vp-verzend)*perc;
+    } else if (p==='amazon') {
+      verzend=g('amazon-verzend'); const perc=g('amazon-perc')/100, vast=g('amazon-vast');
+      vp=(basis+verzend+vast)/(1-perc); comm=vp*perc+vast;
+    } else if (p==='vinted') {
+      verzend=0; comm=0; vp=basis;
+    } else {
+      verzend=g('eigen-verzend'); const perc=g('eigen-perc')/100, vast=g('eigen-vast');
+      vp=(basis+verzend+vast)/(1-perc); comm=vp*perc+vast;
+    }
+    const winst=vp-comm-verzend-tot;
+    const pct=tot>0?(winst/tot*100):0;
+    res.push({p,vp,comm,verzend,winst,pct});
   });
-  bereken();
-}
 
-function bereken() {
-  const gram = parseFloat(document.getElementById('gram').value) || 0;
-  const filamentprijs = parseFloat(document.getElementById('filamentprijs').value) || 0;
-  const printtijd = parseFloat(document.getElementById('printtijd').value) || 0;
-  const stroom = parseFloat(document.getElementById('stroom').value) || 0;
-  const arbeid = parseFloat(document.getElementById('arbeid').value) || 0;
-  const arbeidsuren = parseFloat(document.getElementById('arbeidsuren').value) || 0;
-  const verpakking = parseFloat(document.getElementById('verpakking').value) || 0;
-  const overig = parseFloat(document.getElementById('overig').value) || 0;
-  const printerPrijs = parseFloat(document.getElementById('printer-prijs').value) || 0;
-  const printerUren = parseFloat(document.getElementById('printer-uren').value) || 1;
+  res.sort((a,b)=>b.winst-a.winst);
+  let html='';
 
-  const filamentKost = (gram / 1000) * filamentprijs;
-  const stroomKost = printtijd * stroom;
-  const arbeidKost = arbeidsuren * arbeid;
-  const afschrijving = (printerPrijs / printerUren) * printtijd;
+  res.forEach((r,i) => {
+    const isBest = i===0 && res.length>1;
+    const wk = r.winst>0?'pos':r.winst<0?'neg':'';
+    const wt = (r.winst>=0?'+':'')+fmt(r.winst)+' ('+r.pct.toFixed(0)+'%)';
+    let badge;
+    if (isBest)       badge='<div class="badge best">⭐ Meest winstgevend</div>';
+    else if(r.winst<0) badge='<div class="badge bad">⚠️ Verlieslatend</div>';
+    else if(r.pct<20)  badge='<div class="badge warn">⚡ Lage marge</div>';
+    else               badge='<div class="badge good">✓ Winstgevend</div>';
 
-  // Kostprijs = alle kosten ZONDER afschrijving (afschrijving apart getoond)
-  const kostprijs = filamentKost + stroomKost + arbeidKost + verpakking + overig;
-  const totaalKosten = kostprijs + afschrijving;
-
-  document.getElementById('totaal-kosten').textContent = fmt(totaalKosten);
-  document.getElementById('afschrijving-toon').textContent = fmt(afschrijving);
-
-  const marge = parseFloat(document.getElementById('marge').value) || 0;
-  // Basisverkoopprijs gebaseerd op alle kosten incl afschrijving
-  const basisVerkoopprijs = totaalKosten * (1 + marge / 100);
-
-  // --- BOL ---
-  const verzendBol = parseFloat(document.getElementById('verzend-bol').value) || 0;
-  const commBolPerc = parseFloat(document.getElementById('comm-bol').value) || 0;
-  const commBolVast = parseFloat(document.getElementById('comm-bol-vast').value) || 0;
-  // Bol: prijs is incl. verzending. Commissie % wordt berekend over de verkoopprijs.
-  // verkoopprijs incl verzend zodat na commissie % + vast + verzend nog basisVerkoopprijs overblijft:
-  // verkoopprijs - verkoopprijs * commPerc/100 - commVast - verzend = basisVerkoopprijs
-  // verkoopprijs * (1 - commPerc/100) = basisVerkoopprijs + verzend + commVast
-  // verkoopprijs = (basisVerkoopprijs + verzend + commVast) / (1 - commPerc/100)
-  const bolPrijs = (basisVerkoopprijs + verzendBol + commBolVast) / (1 - commBolPerc / 100);
-  const bolCommissie = bolPrijs * (commBolPerc / 100) + commBolVast;
-  const bolWinst = bolPrijs - bolCommissie - verzendBol - totaalKosten;
-
-  document.getElementById('prijs-bol').textContent = fmt(bolPrijs);
-  document.getElementById('b-bol-kostprijs').textContent = fmt(kostprijs);
-  document.getElementById('b-bol-verzend').textContent = fmt(verzendBol);
-  document.getElementById('b-bol-comm').textContent = fmt(bolCommissie);
-  document.getElementById('b-bol-afschr').textContent = fmt(afschrijving);
-  const bolWinstEl = document.getElementById('b-bol-winst');
-  bolWinstEl.textContent = fmt(bolWinst);
-  bolWinstEl.parentElement.className = 'breakdown-row profit' + (bolWinst < 0 ? ' loss' : '');
-  const bolPct = totaalKosten > 0 ? (bolWinst / totaalKosten * 100) : 0;
-  document.getElementById('badge-bol').innerHTML = bolWinst >= 0
-    ? `<span class="profit-badge good">▲ ${bolPct.toFixed(0)}% marge</span>`
-    : `<span class="profit-badge bad">▼ verlies</span>`;
-
-  // --- ETSY ---
-  const verzendEtsy = parseFloat(document.getElementById('verzend-etsy').value) || 0;
-  const commEtsyPerc = parseFloat(document.getElementById('comm-etsy').value) || 0;
-  const etsyPrijs = basisVerkoopprijs / (1 - commEtsyPerc / 100) + verzendEtsy;
-  const etsyCommissie = (etsyPrijs - verzendEtsy) * (commEtsyPerc / 100);
-  const etsyWinst = etsyPrijs - etsyCommissie - verzendEtsy - totaalKosten;
-
-  document.getElementById('prijs-etsy').textContent = fmt(etsyPrijs);
-  document.getElementById('b-etsy-kostprijs').textContent = fmt(kostprijs);
-  document.getElementById('b-etsy-verzend').textContent = fmt(verzendEtsy);
-  document.getElementById('b-etsy-comm').textContent = fmt(etsyCommissie);
-  document.getElementById('b-etsy-afschr').textContent = fmt(afschrijving);
-  const etsyWinstEl = document.getElementById('b-etsy-winst');
-  etsyWinstEl.textContent = fmt(etsyWinst);
-  etsyWinstEl.parentElement.className = 'breakdown-row profit' + (etsyWinst < 0 ? ' loss' : '');
-  const etsyPct = totaalKosten > 0 ? (etsyWinst / totaalKosten * 100) : 0;
-  document.getElementById('badge-etsy').innerHTML = etsyWinst >= 0
-    ? `<span class="profit-badge good">▲ ${etsyPct.toFixed(0)}% marge</span>`
-    : `<span class="profit-badge bad">▼ verlies</span>`;
-
-  // --- VINTED ---
-  const vintedPrijs = basisVerkoopprijs;
-  const vintedWinst = vintedPrijs - totaalKosten;
-
-  document.getElementById('prijs-vinted').textContent = fmt(vintedPrijs);
-  document.getElementById('b-vinted-kostprijs').textContent = fmt(kostprijs);
-  document.getElementById('b-vinted-verzend').textContent = fmt(verzendVinted);
-  document.getElementById('b-vinted-comm').textContent = fmt(vintedCommissie);
-  document.getElementById('b-vinted-afschr').textContent = fmt(afschrijving);
-  const vintedWinstEl = document.getElementById('b-vinted-winst');
-  vintedWinstEl.textContent = fmt(vintedWinst);
-  vintedWinstEl.parentElement.className = 'breakdown-row profit' + (vintedWinst < 0 ? ' loss' : '');
-  const vintedPct = totaalKosten > 0 ? (vintedWinst / totaalKosten * 100) : 0;
-  document.getElementById('badge-vinted').innerHTML = vintedWinst >= 0
-    ? `<span class="profit-badge good">▲ ${vintedPct.toFixed(0)}% marge</span>`
-    : `<span class="profit-badge bad">▼ verlies</span>`;
-}
-
-// Live update
-document.querySelectorAll('input').forEach(el => {
-  el.addEventListener('input', bereken);
-});
-
-bereken();
-
-// PWA Service Worker registratie
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log('Service Worker geregistreerd'))
-      .catch(err => console.log('SW fout:', err));
+    html+=`<div class="rblock">
+      <div class="rtop">
+        <div class="rname">${nm[r.p]}</div>
+        <div class="rright"><div class="rprice">${fmt(r.vp)}</div><div class="rprice-note">aanbevolen verkoopprijs</div></div>
+      </div>
+      <div class="rrows">
+        <div class="rrow"><span>Kostprijs</span><span>${fmt(tot)}</span></div>
+        ${r.verzend>0?`<div class="rrow"><span>Verzendkosten</span><span>${fmt(r.verzend)}</span></div>`:''}
+        ${r.comm>0?`<div class="rrow"><span>Platformkosten</span><span>− ${fmt(r.comm)}</span></div>`:''}
+        <div class="rrow total ${wk}"><span>Netto winst</span><span>${wt}</span></div>
+      </div>
+      ${badge}
+    </div>`;
   });
+
+  const b = res[0];
+  let ac, at, atxt;
+  if (b.winst<0) {
+    ac='bad'; at='⚠️ Let op: verlieslatend';
+    atxt='Op alle geselecteerde platforms maak je momenteel verlies. Verhoog de winstmarge, verlaag je kosten of pas de verkoopprijs handmatig aan.';
+  } else if (b.pct<25) {
+    ac='warn'; at='⚡ Marge is aan de lage kant';
+    atxt='Je winstmarge is relatief laag. Overweeg een hogere marge in stap 2 of zoek naar kostenbesparingen.'+(res.length>1?' <strong>'+nm[b.p]+'</strong> levert momenteel de meeste winst op.':'');
+  } else {
+    ac='good'; at='✅ Gezonde winstmarge';
+    atxt='Je verkoopprijzen zien er goed uit.'+(res.length>1?' <strong>'+nm[b.p]+'</strong> is het meest winstgevend. Vergelijk ook de verkoopbaarheid per platform.':' Controleer of de prijs marktconform is door vergelijkbare producten te bekijken.');
+  }
+  html+=`<div class="advies ${ac}"><div class="advies-title">${at}</div>${atxt}</div>`;
+  document.getElementById('rb').innerHTML=html;
 }
+
+document.querySelectorAll('input[type="number"]').forEach(el=>el.addEventListener('input',calc));
+calc();
+if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
 </body>
 </html>
